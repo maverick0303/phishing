@@ -5,25 +5,38 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 # CONFIGURA TU CUENTA GMAIL AQUI 👇
-GMAIL_USER = "pruebasunisimple@gmail.com"  # Tu cuenta Gmail
-GMAIL_PASSWORD = "ukpu xgyo wpuc grvo"  # Contraseña de aplicación generada
+GMAIL_USER = "pruebasunisimple@gmail.com"
+GMAIL_PASSWORD = "ukpu xgyo wpuc grvo"
 
-# Cargar la lista de jefes desde el Excel
+# Ruta al archivo de registro
+registro_path = "correos_enviados.csv"
+
+# Cargar jefes desde Excel
 df = pd.read_excel("jefaturas_template.xlsx")
 df.columns = df.columns.str.strip().str.lower().str.replace(" ", "_")
 
-# Conexión segura con Gmail usando SSL
+# Cargar lista de correos ya enviados (si existe)
+if os.path.exists(registro_path):
+    enviados = pd.read_csv(registro_path)["correo"].tolist()
+else:
+    enviados = []
+
+# Conexión segura
 server = smtplib.SMTP_SSL("smtp.gmail.com", 465)
 server.login(GMAIL_USER, GMAIL_PASSWORD)
 
-# Enviar un correo por cada HTML generado
+# Lista para actualizar después
+correos_nuevos_enviados = []
+
+# Enviar uno por uno
 for _, fila in df.iterrows():
     jefe = fila["jefe_nombre"]
-    
-    # SOLO PARA PRUEBAS: envía todos a tu correo personal
-    correo_destino = "mariavyeguezp@gmail.com"  # 👈 Aquí va tu correo de prueba
+    correo_destino = fila["jefe_email"]
 
-    # Buscar el archivo HTML del jefe correspondiente
+    if correo_destino in enviados:
+        print(f"⏭ Ya fue enviado a: {correo_destino}, se omite.")
+        continue
+
     nombre_archivo = f"{jefe.replace(' ', '_')}.html"
     ruta_html = os.path.join("correos_jefatura", nombre_archivo)
 
@@ -34,7 +47,6 @@ for _, fila in df.iterrows():
     with open(ruta_html, "r", encoding="utf-8") as f:
         contenido = f.read()
 
-    # Crear el correo
     msg = MIMEMultipart("alternative")
     msg["Subject"] = "Medida Preventiva Jefaturas – Curso de Phishing"
     msg["From"] = GMAIL_USER
@@ -43,9 +55,17 @@ for _, fila in df.iterrows():
 
     try:
         server.sendmail(GMAIL_USER, correo_destino, msg.as_string())
-        print(f"✅ Enviado a: {correo_destino} (contenido de: {jefe})")
+        print(f"✅ Enviado a: {correo_destino}")
+        correos_nuevos_enviados.append(correo_destino)
     except Exception as e:
         print(f"❌ Error con {correo_destino}: {e}")
 
-# Cerrar servidor SMTP
 server.quit()
+
+# Guardar los nuevos correos enviados al archivo CSV
+if correos_nuevos_enviados:
+    df_nuevos = pd.DataFrame({"correo": correos_nuevos_enviados})
+    if os.path.exists(registro_path):
+        df_nuevos.to_csv(registro_path, mode="a", header=False, index=False)
+    else:
+        df_nuevos.to_csv(registro_path, index=False)
