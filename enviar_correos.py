@@ -3,6 +3,7 @@ import smtplib
 import pandas as pd
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from email.mime.image import MIMEImage
 
 # CONFIGURA TU CUENTA GMAIL AQUI 👇
 GMAIL_USER = "pruebasunisimple@gmail.com"
@@ -49,11 +50,26 @@ for _, fila in df_jefes.iterrows():
     with open(ruta_html, "r", encoding="utf-8") as f:
         contenido = f.read()
 
-    msg = MIMEMultipart("alternative")
+    # 🧩 Inyectamos imagen al final del contenido
+    contenido += '<br><img src="cid:claroimg" style="width:100%; max-width:600px; margin-top:20px;">'
+
+    msg = MIMEMultipart("related")
     msg["Subject"] = "Medida Preventiva Jefaturas – Curso de Phishing"
     msg["From"] = GMAIL_USER
     msg["To"] = correo_destino
-    msg.attach(MIMEText(contenido, "html"))
+
+    alt = MIMEMultipart("alternative")
+    alt.attach(MIMEText(contenido, "html"))
+    msg.attach(alt)
+
+    if os.path.exists("claro.png"):
+        with open("claro.png", "rb") as f:
+            img = MIMEImage(f.read())
+            img.add_header("Content-ID", "<claroimg>")
+            img.add_header("Content-Disposition", "inline", filename="claro.png")
+            msg.attach(img)
+    else:
+        print("⚠️ No se encontró claro.png")
 
     try:
         server.sendmail(GMAIL_USER, correo_destino, msg.as_string())
@@ -69,7 +85,6 @@ if jefes_nuevos_enviados:
         df_nuevos.to_csv(registro_jefes, mode="a", header=False, index=False)
     else:
         df_nuevos.to_csv(registro_jefes, index=False)
-
 
 # ================================
 # 🟢 ENVÍO A USUARIOS
@@ -109,11 +124,24 @@ for _, fila in df_usuarios.iterrows():
     with open(ruta_html, "r", encoding="utf-8") as f:
         contenido = f.read()
 
-    msg = MIMEMultipart("alternative")
+    # Inyectamos imagen al final
+    contenido += '<br><img src="cid:claroimg" style="width:100%; max-width:600px; margin-top:20px;">'
+
+    msg = MIMEMultipart("related")
     msg["Subject"] = "Resultado Simulación de Phishing – ClaroVTR"
     msg["From"] = GMAIL_USER
     msg["To"] = correo_destino
-    msg.attach(MIMEText(contenido, "html"))
+
+    alt = MIMEMultipart("alternative")
+    alt.attach(MIMEText(contenido, "html"))
+    msg.attach(alt)
+
+    if os.path.exists("claro.png"):
+        with open("claro.png", "rb") as f:
+            img = MIMEImage(f.read())
+            img.add_header("Content-ID", "<claroimg>")
+            img.add_header("Content-Disposition", "inline", filename="claro.png")
+            msg.attach(img)
 
     try:
         server.sendmail(GMAIL_USER, correo_destino, msg.as_string())
