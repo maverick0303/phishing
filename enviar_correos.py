@@ -18,6 +18,7 @@ print("📤 Enviando correos a jefaturas...")
 archivo_jefes = "jefaturas_template.xlsx"
 carpeta_jefes = "correos_jefatura"
 registro_jefes = "correos_enviados_jefes.csv"
+imagen_banner = "claro.png"
 
 df_jefes = pd.read_excel(archivo_jefes)
 df_jefes.columns = df_jefes.columns.str.strip().str.lower().str.replace(" ", "_")
@@ -50,26 +51,23 @@ for _, fila in df_jefes.iterrows():
     with open(ruta_html, "r", encoding="utf-8") as f:
         contenido = f.read()
 
-    # 🧩 Inyectamos imagen al final del contenido
-    contenido += '<br><img src="cid:claroimg" style="width:100%; max-width:600px; margin-top:20px;">'
+    # Insertar imagen al final del contenido HTML
+    contenido += '<br><img src="cid:bannerimage">'
 
     msg = MIMEMultipart("related")
     msg["Subject"] = "Medida Preventiva Jefaturas – Curso de Phishing"
     msg["From"] = GMAIL_USER
     msg["To"] = correo_destino
 
-    alt = MIMEMultipart("alternative")
-    alt.attach(MIMEText(contenido, "html"))
-    msg.attach(alt)
+    msg_alternativo = MIMEMultipart("alternative")
+    msg_alternativo.attach(MIMEText(contenido, "html"))
+    msg.attach(msg_alternativo)
 
-    if os.path.exists("claro.png"):
-        with open("claro.png", "rb") as f:
-            img = MIMEImage(f.read())
-            img.add_header("Content-ID", "<claroimg>")
-            img.add_header("Content-Disposition", "inline", filename="claro.png")
-            msg.attach(img)
-    else:
-        print("⚠️ No se encontró claro.png")
+    if os.path.exists(imagen_banner):
+        with open(imagen_banner, "rb") as img:
+            imagen = MIMEImage(img.read())
+            imagen.add_header('Content-ID', '<bannerimage>')
+            msg.attach(imagen)
 
     try:
         server.sendmail(GMAIL_USER, correo_destino, msg.as_string())
@@ -124,24 +122,22 @@ for _, fila in df_usuarios.iterrows():
     with open(ruta_html, "r", encoding="utf-8") as f:
         contenido = f.read()
 
-    # Inyectamos imagen al final
-    contenido += '<br><img src="cid:claroimg" style="width:100%; max-width:600px; margin-top:20px;">'
+    contenido += '<br><img src="cid:bannerimage">'
 
     msg = MIMEMultipart("related")
     msg["Subject"] = "Resultado Simulación de Phishing – ClaroVTR"
     msg["From"] = GMAIL_USER
     msg["To"] = correo_destino
 
-    alt = MIMEMultipart("alternative")
-    alt.attach(MIMEText(contenido, "html"))
-    msg.attach(alt)
+    msg_alternativo = MIMEMultipart("alternative")
+    msg_alternativo.attach(MIMEText(contenido, "html"))
+    msg.attach(msg_alternativo)
 
-    if os.path.exists("claro.png"):
-        with open("claro.png", "rb") as f:
-            img = MIMEImage(f.read())
-            img.add_header("Content-ID", "<claroimg>")
-            img.add_header("Content-Disposition", "inline", filename="claro.png")
-            msg.attach(img)
+    if os.path.exists(imagen_banner):
+        with open(imagen_banner, "rb") as img:
+            imagen = MIMEImage(img.read())
+            imagen.add_header('Content-ID', '<bannerimage>')
+            msg.attach(imagen)
 
     try:
         server.sendmail(GMAIL_USER, correo_destino, msg.as_string())
@@ -160,4 +156,24 @@ if usuarios_nuevos_enviados:
     else:
         df_nuevos.to_csv(registro_usuarios, index=False)
 
+# ================================
+# 🧼 LIMPIEZA DE ARCHIVOS TEMPORALES
+# ================================
+
+def limpiar_htmls(directorio, archivos_base):
+    for archivo in os.listdir(directorio):
+        if archivo.endswith(".html") and archivo not in archivos_base:
+            try:
+                os.remove(os.path.join(directorio, archivo))
+                print(f"🗑️ Eliminado: {archivo}")
+            except Exception as e:
+                print(f"⚠️ No se pudo eliminar {archivo}: {e}")
+
+plantillas_jefes = ["jefes.html"]
+plantillas_usuarios = ["usuarios.html"]
+
+limpiar_htmls(carpeta_jefes, plantillas_jefes)
+limpiar_htmls(carpeta_usuarios, plantillas_usuarios)
+
 print("\n✅ Correos enviados correctamente.")
+# Fin del script
