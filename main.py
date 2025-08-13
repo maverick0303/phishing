@@ -1,23 +1,17 @@
 import pandas as pd
-from jinja2 import Environment, FileSystemLoader
-import os
+from jinja2 import Template
 
-# Archivos
-EXCEL_FILE = "usuarios.xlsx"        # Tu archivo Excel
-TEMPLATE_FILE = "usuarios.html"  # Plantilla HTML
-OUTPUT_DIR = "correos_html"
+# 1. Cargar Excel
+df = pd.read_excel("usuarios.xlsx")
 
-# Crear carpeta de salida si no existe
-os.makedirs(OUTPUT_DIR, exist_ok=True)
+# 2. Normalizar columnas
+df.columns = df.columns.str.strip().str.lower()
 
-# Cargar datos
-df = pd.read_excel(EXCEL_FILE)
+# 3. Cargar plantilla HTML
+with open("usuarios.html", "r", encoding="utf-8") as f:
+    template = Template(f.read())
 
-# Configurar Jinja2
-env = Environment(loader=FileSystemLoader('.'))
-template = env.get_template(TEMPLATE_FILE)
-
-# Generar HTML para cada fila
+# 4. Generar un HTML por persona
 for _, row in df.iterrows():
     html_content = template.render(
         nombre=row['nombres'],
@@ -26,10 +20,10 @@ for _, row in df.iterrows():
         resultado_mayo=row['segundo ejercicio bad bunny - mayo'],
         resultado_junio=row['tercer ejercicio remuneraciones - junio']
     )
-    
-    # Guardar archivo HTML
-    output_path = os.path.join(OUTPUT_DIR, f"{row['nombres']}.html")
-    with open(output_path, "w", encoding="utf-8") as f:
-        f.write(html_content)
 
-print(f"Archivos generados en '{OUTPUT_DIR}'")
+    # Guardar archivo HTML personalizado
+    nombre_archivo = f"{row['nombres'].replace(' ', '_')}.html"
+    with open(nombre_archivo, "w", encoding="utf-8") as salida:
+        salida.write(html_content)
+
+    print(f"✅ Generado {nombre_archivo}")
