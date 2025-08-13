@@ -19,21 +19,19 @@
 </head>
 <body>
 <div class="contenedor">
-    <h2>Estimado/a {{ jefe_nombre }}</h2>
+    <h2>Estimado/a Daniela Ruiz</h2>
 
     <p>
     Junto con saludar, queremos informarle que
-    {% if cantidad_colaboradores|int == 1 %}
-        el colaborador registrado bajo su jefatura directa ha presentado fallas reiteradas en las simulaciones de phishing realizadas durante los últimos meses.
-    {% else %}
+    
         uno o más colaboradores bajo su jefatura directa han presentado fallas reiteradas en las simulaciones de phishing realizadas durante los últimos meses.
-    {% endif %}
+    
     </p>
 
-    {% if periodo_meses %}
-    <p><strong>Período considerado:</strong> {{ periodo_meses }}
-    {% if cantidad_colaboradores %} &nbsp;|&nbsp; <strong>Cantidad de colaboradores:</strong> {{ cantidad_colaboradores }}{% endif %}</p>
-    {% endif %}
+    
+    <p><strong>Período considerado:</strong> diciembre - marzo 2026
+     &nbsp;|&nbsp; <strong>Cantidad de colaboradores:</strong> 3</p>
+    
 
     <p>A continuación, se detallan los colaboradores afectados:</p>
     <table class="grid">
@@ -41,12 +39,22 @@
             <tr><th>NOMBRE</th></tr>
         </thead>
         <tbody>
-            {% for c in colaboradores.split(',') %}
-            {% set nombre = c.strip() %}
-            {% if nombre %}
-            <tr><td>{{ nombre }}</td></tr>
-            {% endif %}
-            {% endfor %}
+            
+            
+            
+            <tr><td>Jesus Salinas</td></tr>
+            
+            
+            
+            
+            <tr><td>Matias Rios</td></tr>
+            
+            
+            
+            
+            <tr><td>Katherine Villalobos</td></tr>
+            
+            
         </tbody>
     </table>
 
@@ -62,8 +70,8 @@
 
     <p>
     Con el fin de reforzar las capacidades para identificar correos maliciosos, los colaboradores han sido inscritos en el curso
-    <strong>{{ curso_titulo or 'Aprendamos sobre Phishing' }}</strong> mediante
-    <a href="{{ curso_link or '#' }}" target="_blank">{{ curso_plataforma or 'Academia ClaroVTR' }}</a>.
+    <strong>Aprendamos sobre Phishing</strong> mediante
+    <a href="nan" target="_blank">Academia ClaroVTR</a>.
     </p>
 
     <p>
@@ -72,9 +80,9 @@
 
     <p>
     Quedamos a su disposición para cualquier apoyo adicional que requiera.
-    {% if correo_soporte %}
-    Ante dudas, escríbanos a <a href="mailto:{{ correo_soporte }}">{{ correo_soporte }}</a>.
-    {% endif %}
+    
+    Ante dudas, escríbanos a <a href="mailto:SeguridadTI@clarovtr.cl">SeguridadTI@clarovtr.cl</a>.
+    
     </p>
 
     <p class="footer">
