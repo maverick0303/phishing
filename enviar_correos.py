@@ -8,37 +8,39 @@ from email.mime.text import MIMEText
 GMAIL_USER = "pruebasunisimple@gmail.com"
 GMAIL_PASSWORD = "ukpu xgyo wpuc grvo"
 
-# Ruta al archivo de registro
-registro_path = "correos_enviados.csv"
+# ================================
+# 🔴 ENVÍO A JEFATURAS
+# ================================
 
-# Cargar jefes desde Excel
-df = pd.read_excel("jefaturas_template.xlsx")
-df.columns = df.columns.str.strip().str.lower().str.replace(" ", "_")
+print("📤 Enviando correos a jefaturas...")
 
-# Cargar lista de correos ya enviados (si existe)
-if os.path.exists(registro_path):
-    enviados = pd.read_csv(registro_path)["correo"].tolist()
+archivo_jefes = "jefaturas_template.xlsx"
+carpeta_jefes = "correos_jefatura"
+registro_jefes = "correos_enviados_jefes.csv"
+
+df_jefes = pd.read_excel(archivo_jefes)
+df_jefes.columns = df_jefes.columns.str.strip().str.lower().str.replace(" ", "_")
+
+if os.path.exists(registro_jefes):
+    enviados_jefes = pd.read_csv(registro_jefes)["correo"].tolist()
 else:
-    enviados = []
+    enviados_jefes = []
 
-# Conexión segura
 server = smtplib.SMTP_SSL("smtp.gmail.com", 465)
 server.login(GMAIL_USER, GMAIL_PASSWORD)
 
-# Lista para actualizar después
-correos_nuevos_enviados = []
+jefes_nuevos_enviados = []
 
-# Enviar uno por uno
-for _, fila in df.iterrows():
+for _, fila in df_jefes.iterrows():
     jefe = fila["jefe_nombre"]
     correo_destino = fila["jefe_email"]
 
-    if correo_destino in enviados:
-        print(f"⏭ Ya fue enviado a: {correo_destino}, se omite.")
+    if correo_destino in enviados_jefes:
+        print(f"⏭ Ya enviado a: {correo_destino} (jefatura)")
         continue
 
     nombre_archivo = f"{jefe.replace(' ', '_')}.html"
-    ruta_html = os.path.join("correos_jefatura", nombre_archivo)
+    ruta_html = os.path.join(carpeta_jefes, nombre_archivo)
 
     if not os.path.exists(ruta_html):
         print(f"❌ No se encontró HTML para: {jefe}")
@@ -55,17 +57,79 @@ for _, fila in df.iterrows():
 
     try:
         server.sendmail(GMAIL_USER, correo_destino, msg.as_string())
-        print(f"✅ Enviado a: {correo_destino}")
-        correos_nuevos_enviados.append(correo_destino)
+        print(f"✅ Enviado a jefatura: {correo_destino}")
+        jefes_nuevos_enviados.append(correo_destino)
     except Exception as e:
-        print(f"❌ Error con {correo_destino}: {e}")
+        print(f"❌ Error enviando a jefatura {correo_destino}: {e}")
+
+# Guardar jefes enviados
+if jefes_nuevos_enviados:
+    df_nuevos = pd.DataFrame({"correo": jefes_nuevos_enviados})
+    if os.path.exists(registro_jefes):
+        df_nuevos.to_csv(registro_jefes, mode="a", header=False, index=False)
+    else:
+        df_nuevos.to_csv(registro_jefes, index=False)
+
+
+# ================================
+# 🟢 ENVÍO A USUARIOS
+# ================================
+
+print("\n📤 Enviando correos a usuarios...")
+
+archivo_usuarios = "usuarios.xlsx"
+carpeta_usuarios = "correos_usuarios"
+registro_usuarios = "correos_enviados_usuarios.csv"
+
+df_usuarios = pd.read_excel(archivo_usuarios)
+df_usuarios.columns = df_usuarios.columns.str.strip().str.lower().str.replace(" ", "_")
+
+if os.path.exists(registro_usuarios):
+    enviados_usuarios = pd.read_csv(registro_usuarios)["correo"].tolist()
+else:
+    enviados_usuarios = []
+
+usuarios_nuevos_enviados = []
+
+for _, fila in df_usuarios.iterrows():
+    nombre = fila["nombres"]
+    correo_destino = fila["correo"]
+
+    if correo_destino in enviados_usuarios:
+        print(f"⏭ Ya enviado a: {correo_destino} (usuario)")
+        continue
+
+    nombre_archivo = f"{nombre.replace(' ', '_')}.html"
+    ruta_html = os.path.join(carpeta_usuarios, nombre_archivo)
+
+    if not os.path.exists(ruta_html):
+        print(f"❌ No se encontró HTML para: {nombre}")
+        continue
+
+    with open(ruta_html, "r", encoding="utf-8") as f:
+        contenido = f.read()
+
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = "Resultado Simulación de Phishing – ClaroVTR"
+    msg["From"] = GMAIL_USER
+    msg["To"] = correo_destino
+    msg.attach(MIMEText(contenido, "html"))
+
+    try:
+        server.sendmail(GMAIL_USER, correo_destino, msg.as_string())
+        print(f"✅ Enviado a usuario: {correo_destino}")
+        usuarios_nuevos_enviados.append(correo_destino)
+    except Exception as e:
+        print(f"❌ Error enviando a usuario {correo_destino}: {e}")
 
 server.quit()
 
-# Guardar los nuevos correos enviados al archivo CSV
-if correos_nuevos_enviados:
-    df_nuevos = pd.DataFrame({"correo": correos_nuevos_enviados})
-    if os.path.exists(registro_path):
-        df_nuevos.to_csv(registro_path, mode="a", header=False, index=False)
+# Guardar usuarios enviados
+if usuarios_nuevos_enviados:
+    df_nuevos = pd.DataFrame({"correo": usuarios_nuevos_enviados})
+    if os.path.exists(registro_usuarios):
+        df_nuevos.to_csv(registro_usuarios, mode="a", header=False, index=False)
     else:
-        df_nuevos.to_csv(registro_path, index=False)
+        df_nuevos.to_csv(registro_usuarios, index=False)
+
+print("\n✅ Correos enviados correctamente.")
