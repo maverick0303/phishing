@@ -5,6 +5,9 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 
+# 📂 Crear carpeta para los registros CSV
+os.makedirs("correos_enviados", exist_ok=True)
+
 # CONFIGURA TU CUENTA GMAIL AQUI 👇
 GMAIL_USER = "pruebasunisimple@gmail.com"
 GMAIL_PASSWORD = "ukpu xgyo wpuc grvo"
@@ -17,7 +20,7 @@ print("📤 Enviando correos a jefaturas...")
 
 archivo_jefes = "jefaturas_template.xlsx"
 carpeta_jefes = "correos_jefatura"
-registro_jefes = "correos_enviados_jefes.csv"
+registro_jefes = "correos_enviados/correos_enviados_jefes.csv"
 
 df_jefes = pd.read_excel(archivo_jefes)
 df_jefes.columns = df_jefes.columns.str.strip().str.lower().str.replace(" ", "_")
@@ -50,7 +53,6 @@ for _, fila in df_jefes.iterrows():
     with open(ruta_html, "r", encoding="utf-8") as f:
         contenido = f.read()
 
-    # 🧩 Inyectamos imagen al final del contenido
     contenido += '<br><img src="cid:claroimg" style="width:100%; max-width:600px; margin-top:20px;">'
 
     msg = MIMEMultipart("related")
@@ -68,8 +70,6 @@ for _, fila in df_jefes.iterrows():
             img.add_header("Content-ID", "<claroimg>")
             img.add_header("Content-Disposition", "inline", filename="claro.png")
             msg.attach(img)
-    else:
-        print("⚠️ No se encontró claro.png")
 
     try:
         server.sendmail(GMAIL_USER, correo_destino, msg.as_string())
@@ -94,7 +94,7 @@ print("\n📤 Enviando correos a usuarios...")
 
 archivo_usuarios = "usuarios.xlsx"
 carpeta_usuarios = "correos_usuarios"
-registro_usuarios = "correos_enviados_usuarios.csv"
+registro_usuarios = "correos_enviados/correos_enviados_usuarios.csv"
 
 df_usuarios = pd.read_excel(archivo_usuarios)
 df_usuarios.columns = df_usuarios.columns.str.strip().str.lower().str.replace(" ", "_")
@@ -124,7 +124,6 @@ for _, fila in df_usuarios.iterrows():
     with open(ruta_html, "r", encoding="utf-8") as f:
         contenido = f.read()
 
-    # Inyectamos imagen al final
     contenido += '<br><img src="cid:claroimg" style="width:100%; max-width:600px; margin-top:20px;">'
 
     msg = MIMEMultipart("related")
